@@ -42,8 +42,11 @@ server.on('connection', (socket) =>{
   socket.on('data', (buffer) => {
     let data = buffer.toString();
     let content = buffer.toString();
-    let print = (users) => {
-      clientPool.forEach((user) => {
+
+//TODO: when a user speaks their nickname should be printed, i.e. teapot: Sup Hacker?
+
+    let print = (users, content) => {
+      users.forEach((user) => {
           user.write(`${socket.nickname}: ${content.toString()}`)
       })
     };
@@ -54,40 +57,48 @@ server.on('connection', (socket) =>{
       socket.nickname = data.split('/nick')[1] || socket.nickname;
       socket.nickname = socket.nickname.trim();
       socket.write(`you are now known as ${socket.nickname}\n`);
-      return
+      return;
     }
 
 
 //TODO: /dm should allow a user to send a message directly to another user by nick name
 
     if (data.startsWith('/dm')){
-      socket.write(`testing ${data}\n`);
       let wholeMsg = data.split('/dm ')[1] || "";
-      socket.write(`wholeMsg: ${wholeMsg}\n`)
       let dmRecipient = wholeMsg.split(/\s+/)[0];
       let content = wholeMsg.replace(dmRecipient, '');
-      socket.write(`content: ${content}\n`);
-      socket.write(`dmRecipient: ${dmRecipient}\n`);
-      // clientPool.forEach((user) => {
-      //   if (user = dmRecipient){
-      //     user.write(`to ${dmRecipient}: ${content.split(/\s+/)[1]}`)
-      //   }
-      // })
-    }
-
-//TODO: when a user speaks their nickname should be printed, i.e. teapot: Sup Hacker?
-
-    else{
-      print(clientPool);
-    }
-  })
-})
+      function findRecipient(clientPool) {
+        return clientPool.nickname === dmRecipient;
+      }
+      print([clientPool.find(findRecipient)], (`**DM** => ${content}`))
+      return;
+      }
 
 //TODO: /troll should take in a number and a message and send the message to everyone that number of times
 
+    if (data.startsWith('/troll')){
+      let wholeMsg = data.split('/troll ')[1] || "";
+      let trollNum = wholeMsg.split(/\s+/)[0];
+      let content = wholeMsg.replace(trollNum, '');
+
+      for(let i = 0; i < trollNum; i++){
+      print(clientPool, content);
+      return;
+      }
+    }
 
 //TODO: /quit should close the connection with the user
 
+    if (data.startsWith('/quit')){
+      socket.end();
+      return;
+    }
+
+    else{
+      print(clientPool, content);
+    }
+  })
+})
 
 server.listen(3000, () => {
   console.log('server up on port 3000');

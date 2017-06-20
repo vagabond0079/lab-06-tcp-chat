@@ -83,14 +83,16 @@ server.on('connection', (socket) =>{
 
       for(let i = 0; i < trollNum; i++){
       print(clientPool, content);
-      return;
       }
+      return;
     }
 
 //TODO: /quit should close the connection with the user
 
     if (data.startsWith('/quit')){
       socket.end();
+      let index = clientPool.indexOf(socket);
+      clientPool.splice(index,1);
       return;
     }
 
